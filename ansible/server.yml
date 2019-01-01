@@ -1,0 +1,86 @@
+---
+- hosts: all
+  user: ec2-user
+  vars:
+    server_name: Angry Bots | Checkpoint Server
+
+  handlers:
+    - name: restart sandstorm
+      become: true
+      systemd:
+        name: sandstorm
+        state: restarted
+        enabled: true
+        daemon_reload: true
+
+    - name: reboot
+      become: true
+      reboot:
+
+  tasks:
+    - name: set hostname
+      become: true
+      hostname: 
+        name: sandstorm-srv
+
+    - name: add steam user
+      become: true
+      user: name=steam
+
+    - name: create /srv/sandstorm
+      become: true
+      file: path=/srv/sandstorm state=directory mode=0755 owner=steam group=steam
+
+    - name: install the required packages
+      become: true
+      yum:
+        name: "{{ packages }}"
+        state: latest
+      vars:
+        packages:
+          - glibc.i686
+          - libstdc++.i686
+
+    - name: upgrade all packages
+      become: true
+      yum:
+        name: '*'
+        state: latest
+        exclude: kernel
+
+    - name: upgrade the kernel
+      notify: reboot
+      become: true
+      yum: name=kernel state=latest
+
+    - name: create steamcmd directory
+      become: true
+      become_user: steam
+      file: path=/home/steam/steamcmd state=directory mode=0755
+
+    - name: install steamcmd
+      become: true
+      become_user: steam
+      unarchive:
+        src: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+        dest: /home/steam/steamcmd
+        remote_src: true
+
+    - name: install sandstorm
+      become: true
+      become_user: steam
+      command: ./steamcmd.sh +login anonymous +force_install_dir /srv/sandstorm +app_update 581330 validate +quit
+      args:
+        chdir: /home/steam/steamcmd
+        creates: /srv/sandstorm/Insurgency
+
+    - name: create systemd service
+      notify: restart sandstorm
+      become: true
+      template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
+
+    - name: copy server files
+      notify: restart sandstorm
+      become: true
+      become_user: steam
+      copy: src=files/server-files/ dest=/srv/sandstorm
