@@ -1,8 +1,7 @@
 ---
 - hosts: all
-  user: ec2-user
   vars:
-    server_name: Angry Bots | Checkpoint Server
+    server_name: "Coop 24x7 | Fun mode | Unlimited Supply | Checkpoint | US"
 
   handlers:
     - name: restart sandstorm
@@ -22,6 +21,17 @@
       become: true
       hostname: 
         name: sandstorm-srv
+
+    - name: enable game ports on firewalld
+      become: true
+      when: ansible_distribution == 'CentOS'
+      firewalld:
+        port: "{{ item }}/udp"
+        permanent: yes
+        state: enabled
+      with_items:
+        - 27131
+        - 27102
 
     - name: add steam user
       become: true
@@ -64,6 +74,7 @@
       unarchive:
         src: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
         dest: /home/steam/steamcmd
+        creates: /home/steam/steamcmd/steamcmd.sh
         remote_src: true
 
     - name: install sandstorm
