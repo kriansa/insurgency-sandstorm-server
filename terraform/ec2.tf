@@ -55,6 +55,6 @@ resource "aws_instance" "main" {
 
   # Wait then start provisioning
   provisioner local-exec {
-    command = "../bin/provision ${self.public_ip}"
+    command = "../bin/provision ${self.public_ip} ec2-user"
   }
 }
