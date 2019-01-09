@@ -28,6 +28,7 @@
       firewalld:
         port: "{{ item }}/udp"
         permanent: yes
+        immediate: yes
         state: enabled
       with_items:
         - 27131
