@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    server_name: "Coop 24x7 | Fun mode | Unlimited Supply | Checkpoint | US"
+    server_name: "Coop 24x7 | Unlimited Supply | Checkpoint | US"
 
   handlers:
     - name: restart sandstorm
