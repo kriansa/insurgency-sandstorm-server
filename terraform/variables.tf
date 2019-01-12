@@ -1,6 +1,6 @@
 variable instance_type {
   type = "string"
-  description = "The type of the instance to be launched for ECS"
+  description = "The type of the instance to be launched"
 }
 
 variable admin_ips {
