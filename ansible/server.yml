@@ -16,11 +16,43 @@
       become: true
       reboot:
 
+    - name: restart ssh
+      become: true
+      systemd: name=sshd state=restarted
+
+    - name: restart yum-cron
+      become: true
+      systemd: name=yum-cron state=restarted
+
   tasks:
     - name: set hostname
       become: true
       hostname: 
         name: sandstorm-srv
+
+    - name: install the required packages
+      become: true
+      yum:
+        name: "{{ packages }}"
+        state: latest
+      vars:
+        packages:
+          - glibc.i686
+          - libstdc++.i686
+          - yum-cron
+          - htop
+
+    - name: upgrade all packages
+      become: true
+      yum:
+        name: '*'
+        state: latest
+        exclude: kernel
+
+    - name: upgrade the kernel
+      notify: reboot
+      become: true
+      yum: name=kernel state=latest
 
     - name: enable game ports on firewalld
       become: true
@@ -34,6 +66,22 @@
         - 27131
         - 27102
 
+    - name: configure yum-cron
+      become: true
+      notify: restart yum-cron
+      lineinfile: 
+        path: /etc/yum/yum-cron.conf
+        regexp: '^apply_updates'
+        line: apply_updates = yes
+
+    - name: disable password SSH auth
+      become: true
+      notify: restart ssh
+      lineinfile: 
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: PasswordAuthentication no
+
     - name: add steam user
       become: true
       user: name=steam
@@ -41,28 +89,6 @@
     - name: create /srv/sandstorm
       become: true
       file: path=/srv/sandstorm state=directory mode=0755 owner=steam group=steam
-
-    - name: install the required packages
-      become: true
-      yum:
-        name: "{{ packages }}"
-        state: latest
-      vars:
-        packages:
-          - glibc.i686
-          - libstdc++.i686
-
-    - name: upgrade all packages
-      become: true
-      yum:
-        name: '*'
-        state: latest
-        exclude: kernel
-
-    - name: upgrade the kernel
-      notify: reboot
-      become: true
-      yum: name=kernel state=latest
 
     - name: create steamcmd directory
       become: true
@@ -78,10 +104,16 @@
         creates: /home/steam/steamcmd/steamcmd.sh
         remote_src: true
 
+    - name: upload update.sh file
+      notify: restart sandstorm
+      become: true
+      become_user: steam
+      copy: src=files/update.sh dest=/home/steam/update.sh
+
     - name: install sandstorm
       become: true
       become_user: steam
-      command: ./steamcmd.sh +login anonymous +force_install_dir /srv/sandstorm +app_update 581330 validate +quit
+      command: /home/steam/update.sh
       args:
         chdir: /home/steam/steamcmd
         creates: /srv/sandstorm/Insurgency
