@@ -108,7 +108,7 @@
       notify: restart sandstorm
       become: true
       become_user: steam
-      copy: src=files/update.sh dest=/home/steam/update.sh
+      copy: src=files/update.sh dest=/home/steam/update.sh mode=0755
 
     - name: install sandstorm
       become: true
