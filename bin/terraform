@@ -6,4 +6,4 @@
 cd "$(dirname "$0")/.." || exit;
 
 # Run terraform
-cd terraform && terraform "$@"
+cd ops/terraform && terraform "$@"

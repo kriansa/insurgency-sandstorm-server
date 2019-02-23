@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# This small script will restart the server gracefully warning the users
+# beforehand so they don't think that it's a bug. Also, we ensure that the
+# server is at the same map when it restarted.
+
+function main {
+  gracefully_restart
+}
+
+function log {
+  time=$(date)
+  echo "[$time] $*"
+}
+
+function gracefully_restart {
+  log "Starting server reboot process"
+  rcon_say "To maintain a high quality and lag-free experience, this server is going to reboot in 30 seconds"
+
+  sleep 10
+  rcon_say "Tip: To reconnect, go to the server finder, then click on the Server column to order by name, then go to the bottom of the list and look for 'ZG'"
+
+  sleep 5
+  rcon_say "After the restart the server will be at this same map!"
+
+  sleep 10
+  rcon_say "Rebooting in 10 seconds! See you soon!"
+
+  sleep 10
+  reboot_server
+  log "Server reboot process finished"
+}
+
+function rcon_say {
+  rcon "say $1"
+}
+
+function get_current_map {
+  journalctl -S "6 hours ago" -u sandstorm | \
+    grep 'LogScenario: Display: Loading scenario ' | \
+    tail -1 | sed -E "s/.*Loading scenario '([A-Za-z_]+)'.*/\1/"
+}
+
+function change_map {
+  rcon "travelscenario $1"
+}
+
+function rcon {
+  rcon-cli --host 127.0.0.1 --password 123 --port 27015 "$1" > /dev/null
+}
+
+function reboot_server {
+  log "Getting current map"
+  local last_map; last_map=$(get_current_map)
+  log "Current map: $last_map"
+
+  log "Restarting process"
+  sudo systemctl restart sandstorm
+  log "Process restarted"
+
+  log "Changing map to $last_map"
+  sleep 10
+  change_map "$last_map"
+  log "Map changed successfully"
+}
+
+main

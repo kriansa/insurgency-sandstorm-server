@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    server_name: "ZG: Checkpoint | Hard | 16 Bots | Unlimited Supply | US"
+    server_name: "🔫 ZG: Checkpoint | Hard | 16 Bots | Unlimited Supply | US"
 
   handlers:
     - name: restart sandstorm
@@ -86,6 +86,23 @@
       become: true
       user: name=steam
 
+    - name: enable sandstorm restart for steam user
+      become: true
+      lineinfile:
+        path: /etc/sudoers.d/steam
+        line: "steam	ALL=(ALL)	NOPASSWD: /usr/bin/systemctl restart sandstorm"
+
+    - name: install rcon-cli
+      become: true
+      unarchive:
+        src: https://github.com/itzg/rcon-cli/releases/download/1.4.4/rcon-cli_1.4.4_linux_amd64.tar.gz
+        dest: /usr/local/bin
+        creates: /usr/local/bin/rcon-cli
+        remote_src: true
+        exclude:
+          - README.md
+          - LICENSE
+
     - name: create /srv/sandstorm
       become: true
       file: path=/srv/sandstorm state=directory mode=0755 owner=steam group=steam
@@ -104,18 +121,16 @@
         creates: /home/steam/steamcmd/steamcmd.sh
         remote_src: true
 
-    - name: upload update.sh file
+    - name: upload server binaries
       notify: restart sandstorm
       become: true
-      become_user: steam
-      copy: src=files/update.sh dest=/home/steam/update.sh mode=0755
+      copy: src=files/server-bin/ dest=/usr/local/bin mode=0755
 
     - name: install sandstorm
       become: true
       become_user: steam
-      command: /home/steam/update.sh
+      command: update-server
       args:
-        chdir: /home/steam/steamcmd
         creates: /srv/sandstorm/Insurgency
 
     - name: create systemd service
@@ -123,8 +138,17 @@
       become: true
       template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
 
+    - name: enable restarts every 6 hours
+      become: true
+      become_user: steam
+      cron:
+        name: restarts sandstorm every 6 hours
+        minute: 0
+        hour: "3,9,15,21"
+        job: restart-server
+
     - name: copy server files
       notify: restart sandstorm
       become: true
       become_user: steam
-      copy: src=files/server-files/ dest=/srv/sandstorm
+      copy: src=files/server-src/ dest=/srv/sandstorm
