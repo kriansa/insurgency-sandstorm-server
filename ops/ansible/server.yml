@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    server_name: "🔫 ZG: Checkpoint | Hard | 16 Bots | Unlimited Supply | US"
+    server_name: "🔫 ZG: Checkpoint | Hard | 16 Bots | Unlimited Supply"
 
   handlers:
     - name: restart sandstorm
