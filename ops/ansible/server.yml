@@ -1,7 +1,7 @@
 ---
 - hosts: all
   vars:
-    server_name: "🔫 ZG: Checkpoint | Hard | 16 Bots | Unlimited Supply"
+    server_name: "🔫 | ZG:US | Checkpoint | Hard | 16 Bots | Unlim. Supply"
 
   handlers:
     - name: restart sandstorm
@@ -86,11 +86,14 @@
       become: true
       user: name=steam
 
+    # In the future, we might use PolicyKit to handle system wide units for this user
+    # See: https://serverfault.com/a/841150
     - name: enable sandstorm restart for steam user
       become: true
       lineinfile:
         path: /etc/sudoers.d/steam
-        line: "steam	ALL=(ALL)	NOPASSWD: /usr/bin/systemctl restart sandstorm"
+        create: true
+        line: "steam	ALL=(ALL)	NOPASSWD: /usr/local/bin/restart-server"
 
     - name: install rcon-cli
       become: true
@@ -129,7 +132,7 @@
     - name: install sandstorm
       become: true
       become_user: steam
-      command: update-server
+      command: /usr/local/bin/update-server
       args:
         creates: /srv/sandstorm/Insurgency
 
@@ -138,6 +141,10 @@
       become: true
       template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
 
+    - name: create restart-server log file
+      become: true
+      file: path=/var/log/restart-server.log state=touch mode=0644 owner=steam group=steam
+
     - name: enable restarts every 6 hours
       become: true
       become_user: steam
@@ -145,7 +152,7 @@
         name: restarts sandstorm every 6 hours
         minute: 0
         hour: "3,9,15,21"
-        job: restart-server
+        job: sudo /usr/local/bin/restart-server >> /var/log/restart-server.log 2>&1
 
     - name: copy server files
       notify: restart sandstorm

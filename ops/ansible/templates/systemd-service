@@ -8,7 +8,7 @@ WorkingDirectory=/srv/sandstorm
 Restart=on-failure
 RestartSec=10
 User=steam
-ExecStartPre=-update-server
+ExecStartPre=-/usr/local/bin/update-server
 ExecStart=/srv/sandstorm/Insurgency/Binaries/Linux/InsurgencyServer-Linux-Shipping \
   Town?Scenario=Scenario_Hideout_Checkpoint_Security?MaxPlayers=8 \
   -MapCycle=MapCycle -Port=27102 -QueryPort=27131 -log \

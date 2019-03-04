@@ -5,12 +5,22 @@
 # server is at the same map when it restarted.
 
 function main {
+  check_root
   gracefully_restart
 }
 
 function log {
   time=$(date)
   echo "[$time] $*"
+}
+
+function check_root {
+  # In the future, we might use PolicyKit to handle system wide units for this user
+  # See: https://serverfault.com/a/841150
+  if [ "$(id -u)" != 0 ]; then
+    log "You need root access to execute this script!"
+    exit 1
+  fi
 }
 
 function gracefully_restart {
@@ -55,7 +65,7 @@ function reboot_server {
   log "Current map: $last_map"
 
   log "Restarting process"
-  sudo systemctl restart sandstorm
+  systemctl restart sandstorm
   log "Process restarted"
 
   log "Changing map to $last_map"
