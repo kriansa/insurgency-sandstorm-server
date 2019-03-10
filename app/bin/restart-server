@@ -56,7 +56,7 @@ function change_map {
 }
 
 function rcon {
-  rcon-cli --host 127.0.0.1 --password 123 --port 27015 "$1" > /dev/null
+  /usr/local/bin/rcon-cli --host 127.0.0.1 --password 123 --port 27015 "$1" > /dev/null
 }
 
 function reboot_server {
