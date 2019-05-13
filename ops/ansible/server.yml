@@ -3,6 +3,10 @@
   vars:
     server_name: "🔫 | ZG:US | Mission Impossible @ 24 Bots"
 
+  roles:
+    - role: kriansa/os-base
+      hostname: sandstorm-srv
+
   handlers:
     - name: restart sandstorm
       become: true
@@ -12,24 +16,7 @@
         enabled: true
         daemon_reload: true
 
-    - name: reboot
-      become: true
-      reboot:
-
-    - name: restart ssh
-      become: true
-      systemd: name=sshd state=restarted
-
-    - name: restart yum-cron
-      become: true
-      systemd: name=yum-cron state=restarted
-
   tasks:
-    - name: set hostname
-      become: true
-      hostname: 
-        name: sandstorm-srv
-
     - name: install the required packages
       become: true
       yum:
@@ -39,48 +26,6 @@
         packages:
           - glibc.i686
           - libstdc++.i686
-          - yum-cron
-          - htop
-
-    - name: upgrade all packages
-      become: true
-      yum:
-        name: '*'
-        state: latest
-        exclude: kernel
-
-    - name: upgrade the kernel
-      notify: reboot
-      become: true
-      yum: name=kernel state=latest
-
-    - name: enable game ports on firewalld
-      become: true
-      when: ansible_distribution == 'CentOS'
-      firewalld:
-        port: "{{ item }}/udp"
-        permanent: yes
-        immediate: yes
-        state: enabled
-      with_items:
-        - 27131
-        - 27102
-
-    - name: configure yum-cron
-      become: true
-      notify: restart yum-cron
-      lineinfile: 
-        path: /etc/yum/yum-cron.conf
-        regexp: '^apply_updates'
-        line: apply_updates = yes
-
-    - name: disable password SSH auth
-      become: true
-      notify: restart ssh
-      lineinfile: 
-        path: /etc/ssh/sshd_config
-        regexp: '^PasswordAuthentication'
-        line: PasswordAuthentication no
 
     - name: add steam user
       become: true
