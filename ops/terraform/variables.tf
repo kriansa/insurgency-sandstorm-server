@@ -1,8 +1,3 @@
-variable instance_type {
-  type = "string"
-  description = "The type of the instance to be launched"
-}
-
 variable admin_ips {
   type = "list"
   description = "The IP list that should have SSH enabled on the instances"
