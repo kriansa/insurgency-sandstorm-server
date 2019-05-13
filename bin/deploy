@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC1091
+#
+# Deploy this service
+
+# cd to root path
+cd "$(dirname "$0")/.." || exit;
+
+# Load the env file
+set -a; source ".env"; set +a
+
+# Only enable auto-approve when in non-interactive shells
+test -t 0 || flags=(-auto-approve)
+
+# Deploy!
+ops/bin/terraform apply "${flags[@]}"

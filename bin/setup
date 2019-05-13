@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#
+# Setup the project on dev machine
+
+# cd to root path
+cd "$(dirname "$0")/.." || exit;
+
+# Install terraform
+ops/bin/terraform init
