@@ -127,7 +127,7 @@
     - name: upload server binaries
       notify: restart sandstorm
       become: true
-      copy: src=files/server-bin/ dest=/usr/local/bin mode=0755
+      copy: src=files/app/bin/ dest=/usr/local/bin mode=0755
 
     - name: install sandstorm
       become: true
@@ -158,4 +158,4 @@
       notify: restart sandstorm
       become: true
       become_user: steam
-      copy: src=files/server-src/ dest=/srv/sandstorm
+      copy: src=files/app/src/ dest=/srv/sandstorm
