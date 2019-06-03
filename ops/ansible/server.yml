@@ -1,11 +1,14 @@
 ---
 - hosts: all
   vars:
-    server_name: "🔫 | ZG:US | Mission Impossible @ 24 Bots"
+    server_name: "🔫 | ZG:US | Mission Impossible | Respawn Tickets"
 
   roles:
     - role: kriansa/os-base
       hostname: sandstorm-srv
+      open_ports:
+        - 27131/udp
+        - 27102/udp
 
   handlers:
     - name: restart sandstorm
@@ -95,7 +98,7 @@
       become_user: steam
       cron:
         name: restarts sandstorm every 6 hours
-        minute: 0
+        minute: "0"
         hour: "3,9,15,21"
         job: sudo /usr/local/bin/restart-server >> /var/log/restart-server.log 2>&1
 
