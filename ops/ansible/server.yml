@@ -1,7 +1,13 @@
 ---
 - hosts: all
   vars:
-    server_name: "🔫 | ZG:US | Mission Impossible | Respawn Tickets"
+    server_name: "🔫 | ZG | 24 Bots | Security | Respawn Tkts"
+    # For a list of maps & scenarios, see: 
+    # https://docs.google.com/document/d/1GDLg5p9jjeIya7EgBk0ibzDtDlyQ-U_jpspOzby-JmM/edit
+    # The gamemode can be either Checkpoint or CheckpointHardcore
+    initial_map: Ministry?Scenario=Scenario_Ministry_Checkpoint_Security?Game=Checkpoint
+    mapcycle: MapCycle-Coop-Security
+    gslt_token: "{{ lookup('env', 'GSLT_TOKEN') }}"
 
   roles:
     - role: kriansa/os-base

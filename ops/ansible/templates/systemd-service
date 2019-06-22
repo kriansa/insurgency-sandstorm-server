@@ -10,8 +10,9 @@ RestartSec=10
 User=steam
 ExecStartPre=-/usr/local/bin/update-server
 ExecStart=/srv/sandstorm/Insurgency/Binaries/Linux/InsurgencyServer-Linux-Shipping \
-  Town?Scenario=Scenario_Hideout_Checkpoint_Security?MaxPlayers=8 \
-  -MapCycle=MapCycle -Port=27102 -QueryPort=27131 -log \
+  {{ initial_map }}?MaxPlayers=8?Port=27102?QueryPort=27131 \
+  -MapCycle={{ mapcycle }} -log \
+  -GameStats -GSLTToken="{{ gslt_token }}" \
   -hostname="{{ server_name }}"
 
 [Install]
