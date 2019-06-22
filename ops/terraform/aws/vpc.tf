@@ -6,7 +6,7 @@ resource "aws_vpc" "main" {
   # https://docs.aws.amazon.com/efs/latest/ug/troubleshooting-efs-mounting.html
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
@@ -14,21 +14,21 @@ resource "aws_vpc" "main" {
 
 # Create a subnet on first AZ of this region
 resource "aws_subnet" "main" {
-  cidr_block = "${cidrsubnet(aws_vpc.main.cidr_block, 8, 1)}" // 10.0.1.0/24
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id = "${aws_vpc.main.id}"
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 1) // 10.0.1.0/24
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.main.id
 
-  tags {
+  tags = {
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
 }
 
 resource "aws_internet_gateway" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
-  tags {
-    Name = "default"
+  tags = {
+    Name        = "default"
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
@@ -36,15 +36,15 @@ resource "aws_internet_gateway" "main" {
 
 # Default route table allows all outbound access to internet gateway
 resource "aws_default_route_table" "main" {
-  default_route_table_id = "${aws_vpc.main.default_route_table_id}"
+  default_route_table_id = aws_vpc.main.default_route_table_id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.main.id}"
+    gateway_id = aws_internet_gateway.main.id
   }
 
-  tags {
-    Name = "default"
+  tags = {
+    Name        = "default"
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
@@ -52,7 +52,7 @@ resource "aws_default_route_table" "main" {
 
 # Allow all outbound access on default SG
 resource "aws_default_security_group" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   egress {
     from_port   = 0
@@ -61,8 +61,8 @@ resource "aws_default_security_group" "main" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
-    Name = "default"
+  tags = {
+    Name        = "default"
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
@@ -71,16 +71,24 @@ resource "aws_default_security_group" "main" {
 resource "aws_security_group" "allow_ssh_from_admin" {
   name        = "AllowSSHFromAdmin"
   description = "Allow inbound SSH traffic from Admin"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    protocol = "tcp"
+    protocol  = "tcp"
     from_port = 22
-    to_port = 22
-    cidr_blocks = ["${var.admin_ips}"]
+    to_port   = 22
+    # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
+    # force an interpolation expression to be interpreted as a list by wrapping it
+    # in an extra set of list brackets. That form was supported for compatibilty in
+    # v0.11, but is no longer supported in Terraform v0.12.
+    #
+    # If the expression in the following list itself returns a list, remove the
+    # brackets to avoid interpretation as a list of lists. If the expression
+    # returns a single list item then leave it as-is and remove this TODO comment.
+    cidr_blocks = [var.admin_ips]
   }
 
-  tags {
+  tags = {
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
@@ -89,24 +97,25 @@ resource "aws_security_group" "allow_ssh_from_admin" {
 resource "aws_security_group" "allow_sandstorm_traffic_from_internet" {
   name        = "AllowSandstormTrafficFromInternet"
   description = "Allow inbound Sandstorm traffic from internet"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
-    protocol = "udp"
-    from_port = 27102
-    to_port = 27102
+    protocol    = "udp"
+    from_port   = 27102
+    to_port     = 27102
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    protocol = "udp"
-    from_port = 27131
-    to_port = 27131
+    protocol    = "udp"
+    from_port   = 27131
+    to_port     = 27131
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags {
+  tags = {
     ServiceType = "Game"
     ServiceName = "SandstormServer"
   }
 }
+

@@ -1,15 +1,19 @@
+# Set AWS variables
+# =================
+variable "aws_default_region" {
+  type = string
+}
+
+variable "aws_profile" {
+  type = string
+}
+
 variable "admin_ips" {
-  type = list(string)
+  type        = list(string)
   description = "The IP list that should have SSH enabled on the instances"
 }
 
 variable "main_public_ssh_key" {
-  type = string
+  type        = string
   description = "The public SSH key used for using with AWS CodeCommit and EC2"
-}
-
-# Require a Digital Ocean token
-variable "do_token" {
-  type = string
-  description = "Authentication token for DigitalOcean"
 }
