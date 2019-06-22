@@ -28,7 +28,7 @@ function gracefully_restart {
   rcon_say "To maintain a high quality and lag-free experience, this server is going to reboot in 30 seconds"
 
   sleep 10
-  rcon_say "Tip: To reconnect, go to the server finder, then click on the Server column to order by name, then go to the bottom of the list and look for 'ZG'"
+  rcon_say "Tip: To reconnect, go to the server finder, then look for 'ZG'"
 
   sleep 5
   rcon_say "After the restart the server will be at this same map!"
