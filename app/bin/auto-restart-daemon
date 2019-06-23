@@ -36,8 +36,7 @@ function restarted_last_hour {
   local restart_timestamp; restart_timestamp=$(date -d "$last_restart" "+%s")
   local current_timestamp; current_timestamp=$(date "+%s")
 
-  test $(( current_timestamp - restart_timestamp )) -le 3600
-  local status; status=$?
+  local status; test $(( current_timestamp - restart_timestamp )) -le 3600; status=$?
 
   if [ $status -eq 0 ]; then
     echo "Server restarted in the last hour"
