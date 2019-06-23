@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# Quickly view/change a game property
+#
+# Usage: gameprop <PROP> [<NEW_VALUE>]
+
+rcon-cli --host 127.0.0.1 --password 123 "gamemodeproperty $*"
