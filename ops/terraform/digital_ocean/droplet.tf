@@ -19,7 +19,13 @@ resource "digitalocean_droplet" "main" {
   image = "centos-7-x64"
   name = "sandstorm-server"
   region = "nyc3"
-  size = "4gb"
+
+  # CPU-Optimized instance
+  # size = "c-2-4gib"
+
+  # Standard Instance
+  size = "s-1vcpu-2gb"
+
   ssh_keys = [digitalocean_ssh_key.default.fingerprint]
 
   # Wait then start provisioning
