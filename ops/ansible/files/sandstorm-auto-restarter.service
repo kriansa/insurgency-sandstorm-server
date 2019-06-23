@@ -1,0 +1,13 @@
+[Unit]
+Description=Sandstorm Server Auto-Restart
+Wants=sandstorm.service
+After=network.target sandstorm.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+ExecStart=/usr/local/bin/auto-restart-daemon
+
+[Install]
+WantedBy=multi-user.target

@@ -12,5 +12,8 @@ set -a; source ".env"; set +a
 # Only enable auto-approve when in non-interactive shells
 test -t 0 || flags=(-auto-approve)
 
+# Build required deployment dependencies
+( cd app/lib/player-counter && GOOS=linux GOARCH=amd64 make clean build )
+
 # Deploy!
 ops/bin/terraform apply "${flags[@]}"

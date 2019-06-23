@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+#
+# This small script will restart the server every hour only when no players are connected.
+# Also, we ensure that the server is at the same map when it restarted.
+
+function main {
+  while true; do
+    restarted_last_hour || gracefully_restart
+    echo "Sleeping for one hour..."
+    sleep 3600
+  done
+}
+
+function gracefully_restart {
+  echo "Starting server reboot process"
+
+  while true; do
+    players_connected || break
+
+    echo "Players connected. Skipping reboot for the next 60 seconds..."
+    sleep 60
+  done
+
+  echo "Server is empty. Rebooting now"
+  reboot_server
+  echo "Server reboot process finished"
+}
+
+function players_connected {
+  test "$(/usr/local/bin/players-count)" != "0"
+}
+
+function restarted_last_hour {
+  local last_restart; last_restart=$(systemctl show sandstorm --property=ExecMainStartTimestamp | \
+    awk -F '=' '{ print $2 }')
+  local restart_timestamp; restart_timestamp=$(date -d "$last_restart" "+%s")
+  local current_timestamp; current_timestamp=$(date "+%s")
+
+  test $(( current_timestamp - restart_timestamp )) -le 3600
+  local status; status=$?
+
+  if [ $status -eq 0 ]; then
+    echo "Server restarted in the last hour"
+  else
+    echo "Server not restarted in the last hour"
+  fi
+
+  return $status
+}
+
+function get_current_map {
+  journalctl -S "6 hours ago" -u sandstorm | \
+    grep 'LogScenario: Display: Loading scenario ' | \
+    tail -1 | sed -E "s/.*Loading scenario '([A-Za-z_]+)'.*/\1/"
+}
+
+function change_map {
+  rcon "travelscenario $1"
+}
+
+function reboot_server {
+  echo "Getting current map"
+  local last_map; last_map=$(get_current_map)
+  echo "Current map: $last_map"
+
+  echo "Restarting service"
+  systemctl restart sandstorm
+  echo "Service restarted"
+
+  echo "Changing map to $last_map"
+  sleep 10
+  change_map "$last_map"
+  echo "Map changed successfully"
+}
+
+function rcon {
+  /usr/local/bin/rcon-cli --host 127.0.0.1 --password 123 --port 27015 "$1" > /dev/null
+}
+
+main

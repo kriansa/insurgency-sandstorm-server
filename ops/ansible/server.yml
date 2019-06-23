@@ -7,6 +7,8 @@
     # The gamemode can be either Checkpoint or CheckpointHardcore
     initial_map: Ministry?Scenario=Scenario_Ministry_Checkpoint_Security?Game=Checkpoint
     mapcycle: MapCycle-Coop-Security
+    # Ensure you create a GSLT token for the game ID 581320
+    gslt_token: "{{ lookup('env', 'GSLT_TOKEN') }}"
 
   roles:
     - role: kriansa/os-base
@@ -16,13 +18,13 @@
         - 27102/udp
 
   handlers:
+    - name: restart auto-reboot service
+      become: true
+      systemd: name=sandstorm-auto-restarter state=restarted enabled=true daemon_reload=true
+
     - name: restart sandstorm
       become: true
-      systemd:
-        name: sandstorm
-        state: restarted
-        enabled: true
-        daemon_reload: true
+      systemd: name=sandstorm state=restarted enabled=true daemon_reload=true
 
   tasks:
     - name: install the required packages
@@ -82,6 +84,11 @@
       become: true
       copy: src=files/app/bin/ dest=/usr/local/bin mode=0755
 
+    - name: upload player-counter
+      notify: restart sandstorm
+      become: true
+      copy: src=files/app/lib/player-counter/build/players-count dest=/usr/local/bin mode=0755
+
     - name: install sandstorm
       become: true
       become_user: steam
@@ -89,27 +96,21 @@
       args:
         creates: /srv/sandstorm/Insurgency
 
-    - name: create systemd service
-      notify: restart sandstorm
-      become: true
-      template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
-
-    - name: create restart-server log file
-      become: true
-      file: path=/var/log/restart-server.log state=touch mode=0644 owner=steam group=steam
-
-    # Temporarily disabled
-    # - name: enable restarts every 6 hours
-    #   become: true
-    #   become_user: steam
-    #   cron:
-    #     name: restarts sandstorm every 6 hours
-    #     minute: "0"
-    #     hour: "3,9,15,21"
-    #     job: sudo /usr/local/bin/restart-server >> /var/log/restart-server.log 2>&1
-
     - name: copy server files
       notify: restart sandstorm
       become: true
       become_user: steam
       copy: src=files/app/src/ dest=/srv/sandstorm
+
+    - name: create systemd service
+      notify: restart sandstorm
+      become: true
+      template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
+
+    - name: create auto-restarter service
+      notify: restart auto-reboot service
+      become: true
+      copy: 
+        src: files/sandstorm-auto-restarter.service 
+        dest: /etc/systemd/system/sandstorm-auto-restarter.service 
+        mode: 0644
