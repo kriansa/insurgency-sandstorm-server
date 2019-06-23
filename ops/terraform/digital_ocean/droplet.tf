@@ -21,10 +21,7 @@ resource "digitalocean_droplet" "main" {
   region = "nyc3"
 
   # CPU-Optimized instance
-  # size = "c-2-4gib"
-
-  # Standard Instance
-  size = "s-1vcpu-2gb"
+  size = "4gb"
 
   ssh_keys = [digitalocean_ssh_key.default.fingerprint]
 
