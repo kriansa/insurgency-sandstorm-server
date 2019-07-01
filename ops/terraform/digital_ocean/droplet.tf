@@ -18,7 +18,7 @@ resource "digitalocean_ssh_key" "default" {
 resource "digitalocean_droplet" "main" {
   image = "centos-7-x64"
   name = "sandstorm-server"
-  region = "nyc3"
+  region = "nyc1"
 
   # CPU-Optimized instance
   size = "4gb"
