@@ -27,6 +27,6 @@ resource "digitalocean_droplet" "main" {
 
   # Wait then start provisioning
   provisioner local-exec {
-    command = "../bin/provision root@${self.ipv4_address}"
+    command = "simple-ansible-provision root@${self.public_ip} ../ansible/server.yml"
   }
 }

@@ -54,9 +54,8 @@ resource "aws_instance" "main" {
   }
 
   # Wait then start provisioning
-  # Wait then start provisioning
   provisioner "local-exec" {
-    command = "../bin/provision ec2-user@${self.public_ip}"
+    command = "simple-ansible-provision ec2-user@${self.public_ip} ../ansible/server.yml"
   }
 }
 

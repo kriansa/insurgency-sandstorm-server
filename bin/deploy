@@ -6,14 +6,11 @@
 # cd to root path
 cd "$(dirname "$0")/.." || exit;
 
-# Load the env file
-set -a; source ".env"; set +a
-
-# Only enable auto-approve when in non-interactive shells
-test -t 0 || flags=(-auto-approve)
-
 # Build required deployment dependencies
 ( cd app/lib/player-counter && GOOS=linux GOARCH=amd64 make clean build )
 
 # Deploy!
-ops/bin/terraform apply "${flags[@]}"
+cd ops/terraform && terraform-auto \
+  --environment-file="../../.env" \
+  --backend-template-file="backend.tf-template" \
+  apply
