@@ -1,11 +1,11 @@
 ---
 - hosts: all
   vars:
-    server_name: "🔫 | ZG | 24 Bots | Security Hard | Respawn Tkts"
-    # For a list of maps & scenarios, see: 
+    server_name: "🔫 | ZG | Mission Impossible | Respawn Tkts"
+    # For a list of maps & scenarios, see:
     # https://docs.google.com/document/d/1GDLg5p9jjeIya7EgBk0ibzDtDlyQ-U_jpspOzby-JmM/edit
     # The gamemode can be either Checkpoint or CheckpointHardcore
-    initial_map: Ministry?Scenario=Scenario_Ministry_Checkpoint_Security?Game=Checkpoint
+    initial_map: Sinjar?Scenario=Scenario_Hillside_Checkpoint_Security?Game=Checkpoint
     mapcycle: MapCycle-Coop-Security
     # Ensure you create a GSLT token for the game ID 581320
     gslt_token: "{{ lookup('env', 'GSLT_TOKEN') }}"
@@ -110,7 +110,7 @@
     - name: create auto-restarter service
       notify: restart auto-reboot service
       become: true
-      copy: 
-        src: files/sandstorm-auto-restarter.service 
-        dest: /etc/systemd/system/sandstorm-auto-restarter.service 
+      copy:
+        src: files/sandstorm-auto-restarter.service
+        dest: /etc/systemd/system/sandstorm-auto-restarter.service
         mode: 0644
