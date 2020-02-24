@@ -6,7 +6,7 @@ resource "digitalocean_firewall" "sandstorm" {
   inbound_rule {
     protocol = "tcp"
     port_range = "22"
-    source_addresses = var.admin_ips
+    source_addresses = [var.admin_ip]
   }
 
   inbound_rule {

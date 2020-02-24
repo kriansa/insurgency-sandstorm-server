@@ -1,15 +1,15 @@
-variable "admin_ips" {
-  type = list(string)
-  description = "The IP list that should have SSH enabled on the instances"
+variable "admin_ip" {
+  type = string
+  description = "The IP that should have SSH enabled on the instances"
 }
 
 variable "main_public_ssh_key" {
   type = string
-  description = "The public SSH key used for using with AWS CodeCommit and EC2"
+  description = "The public SSH key used for authentication"
 }
 
-# Require a Digital Ocean token
-variable "do_token" {
+# Require a Vultr token
+variable "vultr_api_key" {
   type = string
-  description = "Authentication token for DigitalOcean"
+  description = "Authentication token for Vultr"
 }

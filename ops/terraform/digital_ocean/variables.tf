@@ -4,9 +4,9 @@ variable "do_token" {
   description = "Authentication token for DigitalOcean"
 }
 
-variable "admin_ips" {
-  type = list(string)
-  description = "The IP list that should have SSH enabled on the instances"
+variable "admin_ip" {
+  type = string
+  description = "The IP that should have SSH enabled on the instances"
 }
 
 variable "main_public_ssh_key" {

@@ -1,0 +1,5 @@
+---
+# This file is used when the playbook is packaged, thus overriding any 'vars' on the `server.yml`
+# The values wrapped with % are placeholders replaced at build-time.
+# See: <ROOT>/Makefile
+gslt_token: %GSLT_TOKEN%

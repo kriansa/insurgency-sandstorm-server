@@ -1,10 +1,9 @@
-# Let's use Digital Ocean
-module "digital_ocean" {
-  source = "./digital_ocean"
+module "sandstorm_server" {
+  source = "./vultr"
 
   # Pass down the variables
-  do_token = var.do_token
-  admin_ips = var.admin_ips
+  vultr_api_key = var.vultr_api_key
+  admin_ip = var.admin_ip
   main_public_ssh_key = var.main_public_ssh_key
 }
 

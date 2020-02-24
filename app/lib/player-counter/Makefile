@@ -1,7 +1,7 @@
 .PHONY =: build deps
 .DEFAULT_GOAL := build
 
-# This is as far as we can get for a trivial project to have package management.
+# This is the farest we can get for a trivial project to have package management.
 #
 # Go's `dep` project expects all Go code to be inside $GOPATH. That's unmanageable because it forces
 # you to structure your code as language-centric instead of project-centric. That's a choice that
@@ -17,4 +17,4 @@ clean:
 
 build: deps
 	mkdir build
-	go build -o build/players-count src/main.go 
+	go build -o build/players-count src/main.go

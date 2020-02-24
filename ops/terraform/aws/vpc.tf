@@ -85,7 +85,7 @@ resource "aws_security_group" "allow_ssh_from_admin" {
     # If the expression in the following list itself returns a list, remove the
     # brackets to avoid interpretation as a list of lists. If the expression
     # returns a single list item then leave it as-is and remove this TODO comment.
-    cidr_blocks = [var.admin_ips]
+    cidr_blocks = [var.admin_ip]
   }
 
   tags = {
@@ -118,4 +118,3 @@ resource "aws_security_group" "allow_sandstorm_traffic_from_internet" {
     ServiceName = "SandstormServer"
   }
 }
-

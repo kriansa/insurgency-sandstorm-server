@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+#
+# This small utility is used to automatically update sandstorm settings based upon game runtime
+# metrics such as players connected.
+
+function main {
+	while true; do
+		player_count_changed && update_settings
+		sleep 5
+	done
+}
+
+function player_count_changed {
+	local players; players=$(players_connected)
+
+	if [ "$players" != "$last_count" ]; then
+		last_count="$players"
+		return 0
+	else
+		 return 1
+	fi
+}
+
+function update_settings {
+	local players; players=$(players_connected)
+	local waves=$(( (players + 1) / 2 ))
+	local enemies=$(( (players * 2) + 8 ))
+
+	update_gameprop "SoloWaveIncrementOnObjectiveCapture" $waves
+	update_gameprop "SoloEnemies" $enemies
+}
+
+function update_gameprop {
+	local prop=$1
+	local value=$2
+
+	rcon "gamemodeproperty $prop $value"
+	echo "Changed $prop to $value"
+}
+
+function players_connected {
+	/usr/local/bin/players-count
+}
+
+function rcon {
+	/usr/local/bin/rcon-cli --host 127.0.0.1 --password 123 --port 27015 "$*"
+}
+
+main
