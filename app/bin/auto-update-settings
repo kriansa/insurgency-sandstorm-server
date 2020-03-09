@@ -5,9 +5,28 @@
 
 function main {
 	while true; do
-		player_count_changed && update_settings
+		if player_count_changed || map_has_changed; then
+			update_settings
+		fi
 		sleep 5
 	done
+}
+
+function map_has_changed {
+	local map; map=$(get_current_map)
+
+	if [ "$map" != "$last_map" ]; then
+		last_map="$map"
+		return 0
+	else
+		return 1
+	fi
+}
+
+function get_current_map {
+	journalctl -S "6 hours ago" -u sandstorm | \
+		 grep 'LogScenario: Display: Loading scenario ' | \
+		 tail -1 | sed -E "s/.*Loading scenario '([A-Za-z_]+)'.*/\1/"
 }
 
 function player_count_changed {
@@ -17,14 +36,14 @@ function player_count_changed {
 		last_count="$players"
 		return 0
 	else
-		 return 1
+		return 1
 	fi
 }
 
 function update_settings {
 	local players; players=$(players_connected)
 	local waves=$(( (players + 1) / 2 ))
-	local enemies=$(( (players * 2) + 8 ))
+	local enemies=$(( (players * 2) + 12 ))
 
 	update_gameprop "SoloWaveIncrementOnObjectiveCapture" $waves
 	update_gameprop "SoloEnemies" $enemies
