@@ -15,9 +15,9 @@ function gracefully_restart {
   echo "Starting server reboot process"
 
   while true; do
-    players_connected || break
+    recent_activity || break
 
-    echo "Players connected. Skipping reboot for the next 60 seconds..."
+    echo "Activity detected on the server. Skipping reboot for the next 60 seconds..."
     sleep 60
   done
 
@@ -26,8 +26,9 @@ function gracefully_restart {
   echo "Server reboot process finished"
 }
 
-function players_connected {
-  test "$(/usr/local/bin/players-count)" != "0"
+function recent_activity {
+  local logs; logs=$(journalctl -S "5 minutes ago" -qu sandstorm)
+  test "$logs" != ""
 }
 
 function restarted_last_hour {

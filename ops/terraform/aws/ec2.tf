@@ -58,4 +58,3 @@ resource "aws_instance" "main" {
     command = "simple-ansible-provision ec2-user@${self.public_ip} ../ansible/server.yml"
   }
 }
-

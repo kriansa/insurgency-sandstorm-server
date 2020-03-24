@@ -1,12 +1,6 @@
 ---
 - hosts: all
   vars:
-    server_name: "ZGO:US | NO MERCY, Security, Co-op Challenges"
-    # For a list of maps & scenarios, see:
-    # https://docs.google.com/document/d/1GDLg5p9jjeIya7EgBk0ibzDtDlyQ-U_jpspOzby-JmM/edit
-    # The gamemode can be either Checkpoint or CheckpointHardcore
-    initial_map: Sinjar?Scenario=Scenario_Hillside_Checkpoint_Security?Game=Checkpoint
-    mapcycle: MapCycle-Coop-Security
     # Ensure you create a GSLT token for the game ID 581320
     gslt_token: "{{ lookup('env', 'GSLT_TOKEN') }}"
 
@@ -18,11 +12,11 @@
         - 27102/udp
 
   handlers:
-    - name: restart auto-reboot service
+    - name: restart sandstorm-auto-restarter
       become: true
       systemd: name=sandstorm-auto-restarter state=restarted enabled=true daemon_reload=true
 
-    - name: restart auto-settings service
+    - name: restart sandstorm-auto-settings
       become: true
       systemd: name=sandstorm-auto-settings state=restarted enabled=true daemon_reload=true
 
@@ -40,6 +34,7 @@
         packages:
           - glibc.i686
           - libstdc++.i686
+          - vim
 
     - name: add steam user
       become: true
@@ -88,21 +83,6 @@
       become: true
       copy: src=files/app/bin/ dest=/usr/local/bin mode=0755
 
-    - name: add gprop shell alias to root user
-      become: true
-      blockinfile:
-        path: /root/.bashrc
-        block: |
-          alias gprop=gameprop
-          edit="vi /srv/sandstorm/Insurgency/Saved/Config/LinuxServer/Game.ini"
-          restart="systemctl restart sandstorm"
-          logs="journalctl -fu sandstorm"
-
-    - name: upload player-counter
-      notify: restart sandstorm
-      become: true
-      copy: src=files/app/lib/player-counter/build/players-count dest=/usr/local/bin mode=0755
-
     - name: install sandstorm
       become: true
       become_user: steam
@@ -110,29 +90,65 @@
       args:
         creates: /srv/sandstorm/Insurgency
 
-    - name: copy server files
-      notify: restart sandstorm
-      become: true
-      become_user: steam
-      copy: src=files/app/src/ dest=/srv/sandstorm
-
-    - name: create systemd service
-      notify: restart sandstorm
-      become: true
-      template: src=templates/systemd-service dest=/etc/systemd/system/sandstorm.service mode=0644
-
-    - name: create auto-restarter service
-      notify: restart auto-reboot service
+    - name: add tricks to the motd
       become: true
       copy:
-        src: files/sandstorm-auto-restarter.service
-        dest: /etc/systemd/system/sandstorm-auto-restarter.service
-        mode: 0644
+        dest: /etc/motd
+        content: |
+          Sandstorm Server
+          ================
 
-    - name: create auto-settings service
-      notify: restart auto-settings service
+          Quick commands:
+            gprop - Show or edit a game property
+            edit - Open the config.env using vim
+            restart - Restarts the game daemon
+            logs - Show and follow the logs
+            players-count - List the amount of players connected
+
+    - name: add shell aliases to the root user
+      become: true
+      blockinfile:
+        path: /root/.bashrc
+        block: |
+          alias gprop=gameprop
+          alias edit="vim /etc/sandstorm/config.env"
+          alias restart="systemctl restart sandstorm"
+          alias logs="journalctl -fu sandstorm"
+
+    - name: add the extra auth ssh key
+      become: true
+      authorized_key:
+        user: root
+        comment: Additional authentication key
+        key: "{{ lookup('file', 'id_rsa.pub') }}"
+
+    - name: upload player-counter
+      notify: restart sandstorm
+      become: true
+      copy: src=players-count dest=/usr/local/bin mode=0755
+
+    - name: create /etc/sandstorm
+      become: true
+      file: path=/etc/sandstorm state=directory mode=0755
+
+    - name: copy server config files
+      notify: restart sandstorm
+      become: true
+      copy: src={{ item }} dest=/etc/sandstorm
+      with_fileglob: files/app/etc/*.ini
+
+    - name: copy the config.env
+      become: true
+      template: src=files/app/etc/config.env.j2 dest=/etc/sandstorm/config.env mode=0644
+
+    - name: create {{ item }} service
+      notify: restart {{ item }}
       become: true
       copy:
-        src: files/sandstorm-auto-settings.service
-        dest: /etc/systemd/system/sandstorm-auto-settings.service
+        src: files/{{ item }}.service
+        dest: /etc/systemd/system/{{ item }}.service
         mode: 0644
+      loop:
+        - sandstorm
+        - sandstorm-auto-restarter
+        - sandstorm-auto-settings

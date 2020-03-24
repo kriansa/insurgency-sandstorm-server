@@ -13,20 +13,20 @@ function main {
 }
 
 function map_has_changed {
-	local map; map=$(get_current_map)
+	local map_changed; map_changed=$(get_last_mapchange)
 
-	if [ "$map" != "$last_map" ]; then
-		last_map="$map"
+	if [ "$map_changed" != "$last_map_changed_at" ]; then
+		last_map_changed_at="$map_changed"
 		return 0
 	else
 		return 1
 	fi
 }
 
-function get_current_map {
+function get_last_mapchange {
 	journalctl -S "6 hours ago" -u sandstorm | \
 		 grep 'LogScenario: Display: Loading scenario ' | \
-		 tail -1 | sed -E "s/.*Loading scenario '([A-Za-z_]+)'.*/\1/"
+		 tail -1 | grep -o '^.* sandstorm-srv'
 }
 
 function player_count_changed {
@@ -43,7 +43,7 @@ function player_count_changed {
 function update_settings {
 	local players; players=$(players_connected)
 	local waves=$(( (players + 1) / 2 ))
-	local enemies=$(( (players * 2) + 12 ))
+	local enemies=$(( players + 8 ))
 
 	update_gameprop "SoloWaveIncrementOnObjectiveCapture" $waves
 	update_gameprop "SoloEnemies" $enemies

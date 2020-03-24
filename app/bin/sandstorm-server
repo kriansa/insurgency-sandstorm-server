@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+#
+# A server initializer script that reads settings from a central config file instead of harcoded
+# ones. Using this, we don't need to setup MapCycle or Admins files and the starting scenario is
+# always randomly selected from the ones available in the config.
+#
+# See: /etc/sandstorm/config.env
+
+function main {
+	# shellcheck disable=SC1091
+	source /etc/sandstorm/config.env
+	local initial_map; initial_map=$(get_initial_map)
+
+	# Write both Admins and MapCycle file to the right path
+	mkdir -p /srv/sandstorm/Insurgency/Config/Server
+	write_mapcycle
+	write_admins
+	write_gameconfig
+
+	local extra_params=()
+
+	if [ "${#MUTATORS[@]}" -gt 0 ]; then
+		local mutators_list; mutators_list="$(IFS=','; echo "${MUTATORS[*]}")"
+		extra_params+=("-mutators=${mutators_list}")
+	fi
+
+	if [ -n "${GSLT_TOKEN}" ]; then
+		extra_params+=("-GameStats" "-GSLTToken=$GSLT_TOKEN")
+	fi
+
+	exec /srv/sandstorm/Insurgency/Binaries/Linux/InsurgencyServer-Linux-Shipping \
+		"$initial_map?MaxPlayers=$MAXPLAYERS?Port=27102?QueryPort=27131" \
+		-MapCycle=GeneratedMapCycle \
+		-AdminList=GeneratedAdmins \
+		-hostname="$SERVER_NAME" \
+		"${extra_params[@]}"
+}
+
+function write_gameconfig {
+	cp "/etc/sandstorm/$GAME_CONFIG_FILE" \
+		"/srv/sandstorm/Insurgency/Saved/Config/LinuxServer/Game.ini"
+}
+
+function get_initial_map {
+	local mapdef=${AVAILABLE_MAPS[$RANDOM % ${#AVAILABLE_MAPS[@]} ]}
+	IFS=, read -ra mapdef <<< "$mapdef"
+	local map="${mapdef[0]}"
+	local scenario="${mapdef[1]}"
+	local gamemode=${GAMEMODES[$RANDOM % ${#GAMEMODES[@]} ]}
+	local team=${GAMEMODE_TEAMS[$RANDOM % ${#GAMEMODE_TEAMS[@]} ]}
+
+	# For this specific case (getting the scenario name for the initialization parameter) we can
+	# consider that CheckpointHardcore is the same as Checkpoint.
+	# This temp variable exists to ensure we pass the Checkpoint argument to the
+	# `get_map_for_gamemode` when it its CheckpointHardcore.
+	local _gamemode=$gamemode
+	test "$gamemode" = "CheckpointHardcore" && _gamemode=Checkpoint
+	scenario_fullname=$(get_map_for_gamemode "$scenario" "$_gamemode" "$team")
+
+	echo "${map}?${scenario_fullname}?Game=${gamemode}"
+}
+
+function write_admins {
+	local adminsfile=/srv/sandstorm/Insurgency/Config/Server/GeneratedAdmins.txt
+	true > "$adminsfile"
+
+	for admin in "${ADMINS[@]}"; do
+		echo "$admin" >> "$adminsfile"
+	done
+}
+
+function write_mapcycle {
+	local mapfile=/srv/sandstorm/Insurgency/Config/Server/GeneratedMapCycle.txt
+	true > "$mapfile"
+
+	for mapdef in "${AVAILABLE_MAPS[@]}"; do
+		IFS=, read -ra mapdef <<< "$mapdef"
+		local scenario="${mapdef[1]}"
+
+		get_map_combinations "$scenario" >> "$mapfile"
+  done
+}
+
+function get_map_combinations {
+	local scenario=$1
+
+	for gamemode in "${GAMEMODES[@]}"; do
+		get_map_for_gamemode "$scenario" "$gamemode" "${GAMEMODE_TEAMS[@]}"
+	done
+}
+
+function get_map_for_gamemode {
+	local scenario=$1; shift
+	local gamemode=$1; shift
+	local teams=("$@")
+
+	case "$gamemode" in
+		CheckpointHardcore)
+			for team in "${teams[@]}"; do
+				echo "(Scenario=\"Scenario_${scenario}_Checkpoint_${team}\",Mode=\"CheckpointHardcore\")"
+			done
+			;;
+
+		Checkpoint|Push)
+			for team in "${teams[@]}"; do
+				echo "Scenario_${scenario}_${gamemode}_${team}"
+			done
+			;;
+
+		*) echo "Scenario_${scenario}_${gamemode}"
+	esac
+}
+
+main
